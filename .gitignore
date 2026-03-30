@@ -128,5 +128,13 @@ _modules/*
 # Visual Studio Code
 .vscode/
 
+# Docker
+docker-compose.override.yml
+
+# Environment
+.env
+.env.local
+.env.*.local
+
 /results/
 /phpunit*.xml

@@ -1,0 +1,17 @@
+node_modules
+vendor
+.git
+.gitignore
+.env
+.env.local
+.DS_Store
+.vscode
+.idea
+.npm
+composer.lock
+docker-compose.override.yml
+.github
+builds/
+tests/
+README.md
+LICENSE
