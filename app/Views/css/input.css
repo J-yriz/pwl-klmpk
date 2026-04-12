@@ -1,1 +1,169 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@config "../../../tailwind.config.js";
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    scrollbar-color: #101010 #f8fafc;
+  }
+
+  body {
+    @apply bg-neo-paper font-body text-neo-black;
+  }
+
+  main > section,
+  main > article {
+    @apply animate-neo-enter;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-display tracking-tightest;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea {
+    @apply focus-visible:outline-none;
+  }
+}
+
+@layer components {
+  .neo-shell {
+    @apply border-4 border-neo-black bg-neo-cream shadow-neo transition duration-150;
+  }
+
+  .neo-card {
+    @apply border-3 border-neo-black bg-neo-white shadow-neo-sm transition duration-150;
+  }
+
+  .neo-title {
+    @apply font-display uppercase tracking-tightest;
+  }
+
+  .neo-chip {
+    @apply inline-flex items-center border-3 border-neo-black bg-neo-white px-3 py-1 font-mono text-xs font-bold uppercase;
+  }
+
+  .neo-btn {
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight shadow-neo-sm transition duration-150;
+  }
+
+  .neo-btn:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 #101010;
+  }
+
+  .neo-btn:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 0 #101010;
+  }
+
+  .neo-btn-primary {
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-blue px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black shadow-neo-sm transition duration-150;
+  }
+
+  .neo-btn-accent {
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-red px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-white shadow-neo-sm transition duration-150;
+  }
+
+  .neo-btn-ghost {
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black shadow-neo-sm transition duration-150;
+  }
+
+  .neo-btn-primary:hover,
+  .neo-btn-accent:hover,
+  .neo-btn-ghost:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 6px 6px 0 0 #101010;
+  }
+
+  .neo-btn-primary:active,
+  .neo-btn-accent:active,
+  .neo-btn-ghost:active {
+    transform: translate(1px, 1px);
+    box-shadow: 2px 2px 0 0 #101010;
+  }
+
+  .neo-input {
+    @apply w-full border-3 border-neo-black bg-neo-white px-3 py-2 font-body text-sm shadow-neo-sm transition duration-150;
+  }
+
+  .neo-input:focus {
+    background: #ffffff;
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 #101010;
+  }
+
+  .neo-label {
+    @apply mb-2 block font-display text-xs uppercase;
+  }
+
+  .neo-link {
+    @apply border-b-3 border-neo-black font-display uppercase tracking-tight;
+  }
+
+  .neo-alert {
+    @apply border-3 border-neo-black px-4 py-3 font-mono text-xs uppercase shadow-neo-sm;
+  }
+
+  .neo-alert-success {
+    @apply bg-neo-mint;
+  }
+
+  .neo-alert-danger {
+    @apply bg-neo-red text-neo-white;
+  }
+
+  .article-content {
+    @apply font-body text-base leading-7;
+  }
+
+  .article-content h2,
+  .article-content h3 {
+    @apply mt-8 mb-3 font-display uppercase;
+  }
+
+  .article-content p {
+    @apply mb-4;
+  }
+
+  .article-content pre {
+    @apply mb-5 overflow-x-auto border-3 border-neo-black bg-neo-black p-4 font-mono text-sm text-neo-cream;
+  }
+
+  .article-content code {
+    @apply font-mono;
+  }
+
+  .article-content blockquote {
+    @apply my-4 border-l-4 border-neo-black bg-neo-yellow p-3 font-mono;
+  }
+
+  .ql-toolbar.ql-snow {
+    border: 3px solid #101010;
+    background: #f8fafc;
+    font-family: Manrope, sans-serif;
+  }
+
+  .ql-container.ql-snow {
+    border: 3px solid #101010;
+    border-top: 0;
+    background: #ffffff;
+    min-height: 260px;
+    font-family: Manrope, sans-serif;
+  }
+
+  .ql-editor {
+    min-height: 260px;
+  }
+}

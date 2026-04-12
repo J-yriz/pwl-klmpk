@@ -15,6 +15,11 @@ services:
     environment:
       - CI_ENVIRONMENT=development
       - APP_BASEURL=http://localhost
+      - DB_HOST=db
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_NAME=${DB_NAME:-ci4}
+      - DB_USERNAME=${DB_USERNAME:-ci4_user}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
     depends_on:
       - db
 
@@ -30,13 +35,13 @@ services:
       MYSQL_USER: ${DB_USERNAME:-ci4_user}
       MYSQL_ALLOW_EMPTY_PASSWORD: 'false'
     ports:
-      - "${DB_PORT:-3306}:3306"
+      - '${DB_PORT:-3306}:3306'
     volumes:
       - db_data:/var/lib/mysql
     networks:
       - ci4_network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ['CMD', 'mysqladmin', 'ping', '-h', 'localhost']
       timeout: 20s
       retries: 10
 
@@ -46,7 +51,7 @@ services:
     container_name: ci4_nginx
     restart: unless-stopped
     ports:
-      - "${APP_PORT:-80}:80"
+      - '${APP_PORT:-80}:80'
     volumes:
       - ./:/var/www/html
       - ./docker/nginx.conf:/etc/nginx/conf.d/default.conf
@@ -55,7 +60,7 @@ services:
     depends_on:
       - app
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/"]
+      test: ['CMD-SHELL', 'wget -q -O /dev/null http://localhost/ || exit 1']
       timeout: 10s
       retries: 3
 

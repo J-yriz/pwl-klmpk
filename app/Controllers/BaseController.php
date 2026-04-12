@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Libraries\NeritaRepository;
 use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
@@ -20,6 +21,12 @@ use Psr\Log\LoggerInterface;
  */
 abstract class BaseController extends Controller
 {
+    protected $helpers = ['url', 'form', 'text'];
+
+    protected \CodeIgniter\Session\Session $session;
+
+    protected ?array $currentUser = null;
+
     /**
      * Be sure to declare properties for any property fetch you initialized.
      * The creation of dynamic property is deprecated in PHP 8.2.
@@ -40,6 +47,23 @@ abstract class BaseController extends Controller
         parent::initController($request, $response, $logger);
 
         // Preload any models, libraries, etc, here.
-        // $this->session = service('session');
+        $this->session = session();
+
+        $userId = $this->session->get('user_id');
+
+        if (is_numeric($userId)) {
+            $this->currentUser = (new NeritaRepository())->findUserById((int) $userId);
+        }
+
+        service('renderer')->setVar('current_user', $this->currentUser);
+    }
+
+    protected function getCurrentUserId(): ?int
+    {
+        if ($this->currentUser === null) {
+            return null;
+        }
+
+        return (int) $this->currentUser['id'];
     }
 }

@@ -26,14 +26,14 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => 'localhost',
-        'username'     => '',
-        'password'     => '',
-        'database'     => '',
+        'hostname'     => env('database.default.hostname', env('DB_HOST', 'db')),
+        'username'     => env('database.default.username', env('DB_USERNAME', 'ci4_user')),
+        'password'     => env('database.default.password', env('DB_PASSWORD', 'password')),
+        'database'     => env('database.default.database', env('DB_NAME', 'ci4')),
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => true,
+        'DBDebug'      => env('database.default.DBDebug', true),
         'charset'      => 'utf8mb4',
         'DBCollat'     => 'utf8mb4_general_ci',
         'swapPre'      => '',
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => 3306,
+        'port'         => (int) env('database.default.port', env('DB_PORT', 3306)),
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
