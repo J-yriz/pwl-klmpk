@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="<?= base_url('css/output.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('css/output.css?v=' . (is_file(FCPATH . 'css/output.css') ? (string) filemtime(FCPATH . 'css/output.css') : (string) time())) ?>">
 </head>
 <body class="min-h-screen bg-neo-paper text-neo-black">
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">

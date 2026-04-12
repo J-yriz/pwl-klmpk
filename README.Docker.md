@@ -1,522 +1,266 @@
-# Docker Setup untuk CodeIgniter 4 + Tailwind CSS
+# Panduan Menjalankan Project dengan Docker
 
-Panduan lengkap menjalankan project dengan Docker Compose.
+Dokumen ini menjelaskan cara menjalankan project CodeIgniter 4 ini menggunakan Docker Compose.
+Fokusnya adalah langkah praktis dari nol sampai aplikasi siap dipakai.
 
-## Prerequisites
+## 1. Prasyarat
 
-- [Docker](https://docs.docker.com/get-docker/) (versi 20.10+)
-- [Docker Compose](https://docs.docker.com/compose/install/) (versi 2.0+)
+Pastikan sudah terpasang:
 
-## Quick Start
+- Docker Engine
+- Docker Compose Plugin (docker compose)
 
-### 1. Setup Environment
+Cek cepat:
 
-Copy file environment:
+```bash
+docker --version
+docker compose version
+```
+
+## 2. Struktur Service Docker
+
+Project ini memakai service berikut:
+
+- app: PHP-FPM untuk menjalankan CodeIgniter
+- nginx: web server yang menerima request dari browser
+- db: MySQL 8
+- node: watcher Tailwind CSS (opsional, aktif untuk development profile)
+
+## 3. Setup Awal
+
+Jalankan dari root project.
+
+### 3.1 Buat file .env
+
+Jika belum ada .env:
 
 ```bash
 cp env .env
 ```
 
-File `.env` sudah ter-configure untuk Docker.
+### 3.2 Pastikan konfigurasi minimum .env
 
-### 2. Clean Dependencies (First Time Only)
+Periksa nilai berikut di .env:
 
-Sebelum build pertama kali, hapus dependency files jika ada:
+- CI_ENVIRONMENT = development
+- app.baseURL = 'http://localhost/'
+- database.default.hostname = db
+- database.default.database = ci4
+- database.default.username = ci4_user
+- database.default.password = password
+- database.default.port = 3306
+
+Catatan penting untuk session:
+
+- Jangan isi session.savePath dengan null (string)
+- Biarkan kosong/comment agar default framework dipakai
+
+Contoh aman:
+
+```ini
+session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
+# session.savePath =
+```
+
+## 4. Menyalakan Service
+
+### 4.1 Jalankan service utama
 
 ```bash
-docker-compose down -v
-rm -rf vendor node_modules package-lock.json composer.lock
+docker compose up -d
 ```
 
-### 3. Jalankan Docker Compose
+Ini akan menyalakan:
+
+- app
+- db
+- nginx
+
+### 4.2 Cek status service
 
 ```bash
-# Build dan jalankan semua service
-docker-compose up -d --build
-
-# Tunggu proses build selesai (~2-3 menit untuk first build)
-docker-compose logs -f app
+docker compose ps
 ```
 
-### 4. Install Dependencies Manually
+## 5. Inisialisasi Database
 
-Karena folder di-mount sebagai volume, perlu manual install di dalam container:
+Setelah service hidup, jalankan migrasi dan seeder:
 
 ```bash
-# Install PHP dependencies
-docker-compose exec app composer install
-
-# Install Node dependencies
-docker-compose exec app npm install
+docker compose exec -T app php spark migrate -all
+docker compose exec -T app php spark db:seed DatabaseSeeder
 ```
 
-### 5. Build Tailwind CSS
+Cek daftar tabel:
 
 ```bash
-# Build CSS
-docker-compose exec app npm run build:css
-
-# Atau jalankan watcher
-docker-compose up -d node
+docker compose exec -T app php spark db:table
 ```
 
-### 6. Akses Aplikasi
+## 6. Menjalankan Tailwind CSS
 
-- **Website**: http://localhost
-- **Database**: localhost:3306
-  - Username: `ci4_user`
-  - Password: `password`
-  - Database: `ci4`
-- **phpMyAdmin**: http://localhost:8081
-
----
-
-## Penjelasan Technical
-
-### Kenapa Manual Install Diperlukan?
-
-Dockerfile sudah di-configure untuk auto-install dependencies, tetapi karena:
-1. Volume mount mengganti folder di dalam container
-2. Host machine tidak memiliki vendor/node_modules sebelumnya
-3. Docker Compose mount `./` ke `/var/www/html`
-
-Solusinya adalah menjalankan install commands SETELAH container jalan, sehingga dependencies ter-install di dalam container yang sudah ter-mount.
-
-### Proses Build Tahap Demi Tahap
-
-```
-1. docker-compose up -d --build
-   ↓
-   Membangun image PHP dengan all extensions
-   ↓
-   
-2. docker-compose exec app composer install
-   ↓
-   Install PHP dependencies ke /var/www/html/vendor
-   ↓
-   
-3. docker-compose exec app npm install
-   ↓
-   Install Node dependencies ke /var/www/html/node_modules
-   ↓
-   
-4. docker-compose exec app npm run build:css
-   ↓
-   Build Tailwind CSS → public/css/output.css
-   ↓
-   
-✅ Aplikasi siap diakses
-```
-
----
-
-## Command Dasar
+### Opsi A: Build sekali
 
 ```bash
-# Lihat status semua container
-docker-compose ps
-
-# Lihat logs real-time
-docker-compose logs -f
-
-# Lihat logs spesifik service
-docker-compose logs -f app
-docker-compose logs -f db
-docker-compose logs -f nginx
-docker-compose logs -f node
-
-# Jalankan CodeIgniter command
-docker-compose exec app php spark migrate
-docker-compose exec app php spark seed:run
-docker-compose exec app php spark tinker
-
-# Tailwind CSS
-# Build CSS
-docker-compose exec app npm run build:css
-
-# Atau jalankan watcher untuk auto-rebuild saat ada perubahan
-docker-compose up -d node
+npm install
+npm run build:css
 ```
 
-### 4. Akses Aplikasi
-
-- **Website**: http://localhost
-- **Database**: localhost:3306
-  - Username: `ci4_user`
-  - Password: `password`
-  - Database: `ci4`
-- **phpMyAdmin** (development only): http://localhost:8081
-
-
-## Command Dasar
+### Opsi B: Auto-watch lewat Docker (disarankan saat development)
 
 ```bash
-# Lihat status semua container
-docker-compose ps
-
-# Lihat logs real-time
-docker-compose logs -f
-
-# Lihat logs spesifik service
-docker-compose logs -f app
-docker-compose logs -f db
-docker-compose logs -f nginx
-docker-compose logs -f node
-
-# Jalankan CodeIgniter command
-docker-compose exec app php spark migrate
-docker-compose exec app php spark seed:run
-docker-compose exec app php spark tinker
-
-# Tailwind CSS
-docker-compose exec app npm run build:css      # Build sekali
-docker-compose up -d node                      # Jalankan watcher
-docker-compose logs -f node                    # Lihat Tailwind logs
-
-# Jalankan tests
-docker-compose exec app ./vendor/bin/phpunit
-
-# Stop semua service
-docker-compose down
-
-# Stop dan hapus volumes (reset database)
-docker-compose down -v
-
-# Rebuild container (setelah perubahan Dockerfile)
-docker-compose up -d --build
-
-# Restart service tertentu
-docker-compose restart app
-docker-compose restart db
-docker-compose restart nginx
+docker compose --profile dev up -d node
 ```
 
-## Development Workflow
-
-### Frontend Development (Tailwind CSS)
-
-Setup untuk development dengan auto-rebuild CSS:
+Cek watcher:
 
 ```bash
-# 1. Terminal 1 - Jalankan PHP & Database
-docker-compose up -d app db nginx
-
-# 2. Terminal 2 - Jalankan Tailwind watcher
-docker-compose up node
-
-# Atau dalam satu command
-docker-compose up -d app db nginx node
+docker compose --profile dev ps
+docker compose logs -f node
 ```
 
-File CSS akan auto-rebuild saat ada perubahan di file `.php` yang di-scan oleh Tailwind.
+## 7. Akses Aplikasi
 
-Konfigurasi Tailwind:
-- Input: `app/Views/css/input.css`
-- Output: `public/css/output.css`
-- Config: `tailwind.config.js`
+Buka di browser:
 
-### Backend Development (PHP/CodeIgniter)
+- http://localhost
 
-Edit file PHP di `app/` folder, perubahan langsung ter-reflect di browser tanpa perlu rebuild.
+Jika route utama belum sesuai, coba:
 
-Untuk test:
-```bash
-docker-compose exec app ./vendor/bin/phpunit
-docker-compose exec app php spark test
-```
+- http://localhost/index.php
 
-### Code Editing
+## 8. Perintah Harian yang Sering Dipakai
 
-Semua file project di-mount sebagai volume, sehingga:
-- Edit PHP files → langsung ter-reflect tanpa restart
-- Edit CSS/Tailwind → auto-rebuild jika node service running
-- Edit Dockerfile → perlu rebuild dengan `docker-compose up -d --build`
-
-### Database Management
-
-#### Migrate Database
+Start:
 
 ```bash
-docker-compose exec app php spark migrate
+docker compose up -d
 ```
 
-#### Seed Database
+Stop:
 
 ```bash
-docker-compose exec app php spark db:seed SeedName
+docker compose down
 ```
 
-#### Access MySQL Console
+Stop + hapus volume database:
 
 ```bash
-docker-compose exec db mysql -u ci4_user -p ci4
-# Password: password
+docker compose down -v
 ```
 
-## Environment Configuration
-
-### .env Configuration
-
-File `.env` sudah di-copy dari `env` dan ter-configure untuk Docker:
-
-```env
-CI_ENVIRONMENT=development
-
-# APP Configuration
-app.baseURL=http://localhost/
-app.forceGlobalSecureRequests=false
-app.CSPEnabled=false
-
-# DATABASE - pointing ke 'db' service di docker-compose
-database.default.hostname=db
-database.default.database=ci4
-database.default.username=ci4_user
-database.default.password=password
-database.default.DBDriver=MySQLi
-database.default.port=3306
-
-# SESSION & LOGGER
-session.driver=CodeIgniter\Session\Handlers\FileHandler
-logger.threshold=4
-```
-
-**Important**: 
-- `.env` file di-excluded dari git (`.gitignore`)
-- Gunakan untuk local development settings
-- Jangan commit ke repository
-
-### Customize Configuration
-
-Edit `.env` untuk mengubah:
-```env
-app.baseURL=http://localhost:8080/          # Ubah port
-database.default.password=my_secure_password # Ubah DB password
-```
-
-Edit `docker-compose.yml` untuk mengubah port expose:
-```yaml
-services:
-  nginx:
-    ports:
-      - "8080:80"  # Ubah dari 80 ke 8080
-```
-
-## Troubleshooting
-
-### Dependencies tidak ter-install (vendor/node_modules kosong)
-
-Jika setelah build vendor atau node_modules masih kosong:
+Lihat log app:
 
 ```bash
-# Full reset
-docker-compose down -v
-rm -rf vendor node_modules package-lock.json composer.lock
-
-# Rebuild
-docker-compose up -d --build
-
-# Manual install di dalam container
-docker-compose exec app composer install
-docker-compose exec app npm install
-
-# Verify
-docker-compose exec app ls -la vendor/ | head -3
-docker-compose exec app ls -la node_modules/@tailwindcss | head -3
+docker compose logs --tail=100 app
 ```
 
-### "Failed to open stream" / Missing vendor folder
-
-Error: `Failed opening required '/var/www/html/vendor/codeigniter4/framework/...`
-
-Solusi:
-```bash
-docker-compose exec app composer install
-```
-
-### Port sudah digunakan
+Masuk shell app:
 
 ```bash
-# Lihat port yang digunakan
-netstat -tlnp | grep LISTEN
-
-# Atau ubah port di docker-compose.yml
-ports:
-  - "8080:80"  # Ubah dari 80 ke 8080
+docker compose exec app sh
 ```
 
-### Container tidak mau start
+## 9. Troubleshooting
+
+### 9.1 Bad Gateway (502)
+
+Gejala:
+
+- Browser menampilkan Bad Gateway
+
+Penyebab umum:
+
+- nginx belum terhubung ke php-fpm app:9000
+- container app/nginx belum ready
+
+Cek:
 
 ```bash
-# Lihat error logs
-docker-compose logs app
-
-# Rebuild container
-docker-compose down -v
-docker-compose up -d --build
+docker compose ps
+docker compose logs --tail=100 nginx
+docker compose logs --tail=100 app
 ```
 
-### Database connection error
+Perbaikan cepat:
 
 ```bash
-# Tunggu database ready
-docker-compose exec db mysqladmin ping -h localhost -u ci4_user -p
-
-# Lihat database logs
-docker-compose logs db
+docker compose restart app nginx
 ```
 
-### Permission denied di writable folder
+### 9.2 ErrorException mkdir(): Permission denied
+
+Gejala:
+
+- Error session saat membuka halaman
+
+Penyebab umum:
+
+- session.savePath di .env diisi null (string)
+
+Perbaikan:
+
+- Comment/hapus session.savePath di .env
+- Restart app dan nginx
 
 ```bash
-# Set permissions di local machine
-chmod -R 777 writable/
-docker-compose down -v
-docker-compose up -d --build
+docker compose restart app nginx
 ```
 
-### Tailwind CSS tidak ter-build
+### 9.3 Database error (table tidak ada / query gagal)
+
+Penyebab umum:
+
+- migrasi belum dijalankan
+
+Perbaikan:
 
 ```bash
-# Jalankan build manual
-docker-compose exec app npm run build:css
-
-# Atau jalankan watcher
-docker-compose exec node npm run watch:css
+docker compose exec -T app php spark migrate -all
+docker compose exec -T app php spark db:seed DatabaseSeeder
 ```
 
-## Production Deployment
+### 9.4 Tailwind tidak ter-apply
 
-Untuk production, gunakan environment berbeda:
+Checklist:
+
+1. Pastikan file public/css/output.css tidak kosong
+2. Jalankan build ulang
+3. Pastikan node watcher aktif jika development
+4. Hard refresh browser (Ctrl+Shift+R)
+
+Perbaikan cepat:
 
 ```bash
-# Setup production environment
-cp .env.docker .env.production
-
-# Edit .env.production dengan konfigurasi production
-APP_ENV=production
-CI_ENVIRONMENT=production
+npm run build:css
+docker compose restart nginx app
 ```
+
+## 10. Alur Start Cepat (Rekomendasi)
+
+Untuk start dari nol:
 
 ```bash
-# Jalankan dengan production config
-docker-compose -f docker-compose.yml up -d
-```
-
-**Penting**:
-
-- Jangan gunakan `.override.yml` di production
-- Set encryption key di `.env`
-- Aktifkan HTTPS dengan reverse proxy (nginx/traefik)
-- Gunakan proper database backup strategy
-
-## Network
-
-Semua services terhubung via Docker network `ci4_network`:
-
-- `app` - PHP-FPM service
-- `db` - MySQL database (hostname: `db`)
-- `nginx` - Web server
-- `node` - Node.js for Tailwind (dev)
-- `phpmyadmin` - Database GUI (dev only)
-
-## Volumes
-
-- `./` - Project root di-mount ke `/var/www/html`
-- `./writable` - Writable directory dengan proper permissions
-- `db_data` - MySQL data persistence
-
-## Tips & Tricks
-
-### Build Tailwind hanya sekali (production)
-
-Edit `docker-compose.yml`:
-
-```yaml
-node:
-  command: npm run build:css  # Ganti watch dengan build
-```
-
-### Jalankan specific version PHP/MySQL
-
-```yaml
-app:
-  image: php:8.1-fpm-alpine  # Ubah versi
-
-db:
-  image: mysql:5.7  # Ubah versi
-```
-
-### Add services baru
-
-Edit `docker-compose.yml` dan add service baru, misal Redis:
-
-```yaml
-redis:
-  image: redis:7-alpine
-  container_name: ci4_redis
-  networks:
-    - ci4_network
-```
-
-## Git & Version Control
-
-### Files yang di-ignore
-
-File-file berikut sudah di-`.gitignore` dan tidak perlu di-commit:
-
-```
-.env                    # Environment configuration (local)
-.npm/                   # npm cache
-node_modules/           # Node dependencies
-vendor/                 # Composer dependencies
-writable/               # Generated files
-docker-compose.override.yml  # Local overrides
-.vscode/                # VS Code settings (local)
-.idea/                  # PhpStorm settings (local)
-```
-
-### Recommended Git Workflow
-
-```bash
-# Clone repository
-git clone <repo-url>
-cd project
-
-# Setup environment
 cp env .env
-# Edit .env sesuai local setup Anda
-
-# Build dan run
-docker-compose up -d --build
-
-# Build Tailwind
-docker-compose exec app npm run build:css
-
-# Commit hanya file yang penting
-git add app/ docker/ Dockerfile docker-compose.yml README.Docker.md
-git add tailwind.config.js package.json composer.json
-# .env, node_modules, vendor tidak perlu di-commit
+docker compose up -d
+docker compose exec -T app php spark migrate -all
+docker compose exec -T app php spark db:seed DatabaseSeeder
+npm install
+npm run build:css
+docker compose --profile dev up -d node
 ```
 
-### Pre-commit Checklist
+Lalu buka:
 
-Sebelum push ke repository:
-
-- [ ] `.env` file tidak di-include
-- [ ] `node_modules/` dan `vendor/` tidak di-include
-- [ ] `public/css/output.css` di-rebuild terbaru
-- [ ] `.gitignore` sudah update
-- [ ] Docker configuration files ter-include (Dockerfile, docker-compose.yml, dll)
-
-## Support & Issues
-
-Jika mengalami masalah, cek:
-
-1. Docker logs: `docker-compose logs -f service_name`
-2. Container status: `docker-compose ps`
-3. Network connectivity: `docker-compose exec app ping db`
-4. Rebuild container: `docker-compose down -v && docker-compose up -d --build`
+- http://localhost
 
 ---
 
-**Happy Coding! 🚀**
+Jika ingin environment benar-benar bersih (reset database):
+
+```bash
+docker compose down -v
+docker compose up -d
+docker compose exec -T app php spark migrate -all
+docker compose exec -T app php spark db:seed DatabaseSeeder
+```

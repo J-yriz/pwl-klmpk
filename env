@@ -13,6 +13,8 @@ app.baseURL = 'http://localhost/'
 # app_baseURL = ''
 app.forceGlobalSecureRequests = false
 app.CSPEnabled = false
+cookie.domain = ''
+cookie.secure = false
 
 #--------------------------------------------------------------------
 # DATABASE
@@ -42,13 +44,48 @@ database.default.port = 3306
 #--------------------------------------------------------------------
 
 # encryption.key =
+# ENCRYPTION_KEY =
+
+#--------------------------------------------------------------------
+# EMAIL
+#--------------------------------------------------------------------
+
+email.protocol = mail
+email.fromEmail =
+email.fromName =
+email.recipients =
+email.SMTPHost =
+email.SMTPUser =
+email.SMTPPass =
+email.SMTPPort = 25
+email.SMTPAuthMethod = login
+email.SMTPCrypto = tls
 
 #--------------------------------------------------------------------
 # SESSION
 #--------------------------------------------------------------------
 
 session.driver = 'CodeIgniter\Session\Handlers\FileHandler'
-session.savePath = null
+# Leave unset to use Config\Session default WRITEPATH . 'session'
+# session.savePath =
+session.cookieName = 'ci_session'
+
+#--------------------------------------------------------------------
+# SECURITY
+#--------------------------------------------------------------------
+
+security.tokenName = csrf_test_name
+security.cookieName = csrf_cookie_name
+
+#--------------------------------------------------------------------
+# CACHE
+#--------------------------------------------------------------------
+
+cache.memcached.host = 127.0.0.1
+cache.memcached.port = 11211
+cache.redis.host = 127.0.0.1
+cache.redis.password =
+cache.redis.port = 6379
 
 #--------------------------------------------------------------------
 # LOGGER

@@ -26,14 +26,14 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => env('database.default.hostname', env('DB_HOST', 'db')),
-        'username'     => env('database.default.username', env('DB_USERNAME', 'ci4_user')),
-        'password'     => env('database.default.password', env('DB_PASSWORD', 'password')),
-        'database'     => env('database.default.database', env('DB_NAME', 'ci4')),
+        'hostname'     => 'db',
+        'username'     => 'ci4_user',
+        'password'     => 'password',
+        'database'     => 'ci4',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
-        'DBDebug'      => env('database.default.DBDebug', true),
+        'DBDebug'      => true,
         'charset'      => 'utf8mb4',
         'DBCollat'     => 'utf8mb4_general_ci',
         'swapPre'      => '',
@@ -41,7 +41,7 @@ class Database extends Config
         'compress'     => false,
         'strictOn'     => false,
         'failover'     => [],
-        'port'         => (int) env('database.default.port', env('DB_PORT', 3306)),
+        'port'         => 3306,
         'numberNative' => false,
         'foundRows'    => false,
         'dateFormat'   => [
@@ -193,6 +193,13 @@ class Database extends Config
     public function __construct()
     {
         parent::__construct();
+
+        $this->default['hostname'] = env('database.default.hostname', env('DB_HOST', $this->default['hostname']));
+        $this->default['username'] = env('database.default.username', env('DB_USERNAME', $this->default['username']));
+        $this->default['password'] = env('database.default.password', env('DB_PASSWORD', $this->default['password']));
+        $this->default['database'] = env('database.default.database', env('DB_NAME', $this->default['database']));
+        $this->default['DBDebug']  = (bool) env('database.default.DBDebug', $this->default['DBDebug']);
+        $this->default['port']     = (int) env('database.default.port', env('DB_PORT', $this->default['port']));
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
