@@ -60,6 +60,12 @@ writable/session/*
 writable/uploads/*
 !writable/uploads/index.html
 
+writable/uploads/covers/*
+!writable/uploads/covers/index.html
+
+public/uploads/covers/*
+!public/uploads/covers/index.html
+
 writable/debugbar/*
 !writable/debugbar/index.html
 
