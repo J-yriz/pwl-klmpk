@@ -6,6 +6,7 @@ mkdir -p /var/www/html/writable/cache
 mkdir -p /var/www/html/writable/logs
 mkdir -p /var/www/html/writable/session
 mkdir -p /var/www/html/writable/uploads
+mkdir -p /var/www/html/writable/uploads/covers
 mkdir -p /var/www/html/writable/debugbar
 
 # Set proper permissions
