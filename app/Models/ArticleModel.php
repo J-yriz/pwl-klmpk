@@ -23,6 +23,7 @@ class ArticleModel extends Model
         'slug',
         'content',
         'cover_image',
+        'status',
     ];
 
     protected bool $allowEmptyInserts = false;
