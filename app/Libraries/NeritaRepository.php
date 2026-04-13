@@ -218,6 +218,14 @@ class NeritaRepository
         ];
     }
 
+    /**
+     * @return list<array{id:int,name:string,slug:string,articles_count:int}>
+     */
+    public function getNavigationCategories(): array
+    {
+        return $this->getCategoriesWithCount();
+    }
+
     public function findArticleBySlug(string $slug): ?array
     {
         return $this->articleModel->where('slug', $slug)->first();

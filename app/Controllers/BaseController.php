@@ -49,13 +49,16 @@ abstract class BaseController extends Controller
         // Preload any models, libraries, etc, here.
         $this->session = session();
 
+        $repository = new NeritaRepository();
+
         $userId = $this->session->get('user_id');
 
         if (is_numeric($userId)) {
-            $this->currentUser = (new NeritaRepository())->findUserById((int) $userId);
+            $this->currentUser = $repository->findUserById((int) $userId);
         }
 
         service('renderer')->setVar('current_user', $this->currentUser);
+        service('renderer')->setVar('nav_categories', $repository->getNavigationCategories());
     }
 
     protected function getCurrentUserId(): ?int

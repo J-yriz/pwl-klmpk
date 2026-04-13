@@ -9,14 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="<?= base_url('css/output.css?v=' . (is_file(FCPATH . 'css/output.css') ? (string) filemtime(FCPATH . 'css/output.css') : (string) time())) ?>">
 </head>
-<body class="min-h-screen bg-neo-paper text-neo-black">
+<body class="min-h-screen text-neo-black" style="background-color: #e2e4e7;">
     <div aria-hidden="true" class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
         <div class="absolute -left-8 top-24 h-24 w-24 border-4 border-neo-black bg-neo-blue shadow-neo-sm opacity-70"></div>
         <div class="absolute right-8 top-40 h-16 w-16 border-4 border-neo-black bg-neo-mint shadow-neo-sm opacity-75"></div>
         <div class="absolute bottom-16 left-1/2 h-12 w-12 -translate-x-1/2 border-4 border-neo-black bg-neo-red shadow-neo-sm opacity-70"></div>
     </div>
 
-    <?= view('partials/navbar', ['current_user' => $current_user ?? null]) ?>
+    <?= view('partials/navbar', [
+        'current_user' => $current_user ?? null,
+        'nav_categories' => $nav_categories ?? [],
+    ]) ?>
 
     <main class="mx-auto w-full max-w-7xl px-4 py-8 md:px-6 md:py-10">
         <?php if (session()->has('error')): ?>
