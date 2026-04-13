@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700;800&family=JetBrains+Mono:wght@400;600&family=Manrope:wght@400;500;700&display=swap" rel="stylesheet">
+    <?= $this->renderSection('prepend_styles') ?>
     <link rel="stylesheet" href="<?= base_url('css/output.css?v=' . (is_file(FCPATH . 'css/output.css') ? (string) filemtime(FCPATH . 'css/output.css') : (string) time())) ?>">
 </head>
 <body class="min-h-screen text-neo-black" style="background-color: #e2e4e7;">

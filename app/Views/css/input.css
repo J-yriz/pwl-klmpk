@@ -105,7 +105,11 @@
   }
 
   .neo-input {
-    @apply w-full border-3 border-neo-black bg-neo-white px-3 py-2 font-body text-sm shadow-neo-sm transition duration-150;
+    @apply w-full border-3 border-neo-black bg-neo-white px-3 py-2 font-body text-sm;
+    box-shadow: 4px 4px 0 0 #101010;
+    transition-property: transform, box-shadow, background-color;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .neo-input:focus {
@@ -159,13 +163,31 @@
     @apply my-4 border-l-4 border-neo-black bg-neo-yellow p-3 font-mono;
   }
 
-  .ql-toolbar.ql-snow {
+  /* Quill: hard shadow + motion sama seperti .neo-btn-* (prepend_styles memuat quill.snow sebelum output.css) */
+  .neo-quill-wrap {
+    box-shadow: 4px 4px 0 0 #101010;
+    transition-property: transform, box-shadow;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .neo-quill-wrap:focus-within {
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 #101010;
+  }
+
+  .neo-quill-wrap .ql-toolbar.ql-snow,
+  .neo-quill-wrap .ql-container.ql-snow {
+    box-shadow: none;
+  }
+
+  .neo-quill-wrap .ql-toolbar.ql-snow {
     border: 3px solid #101010;
     background: #f8fafc;
     font-family: Manrope, sans-serif;
   }
 
-  .ql-container.ql-snow {
+  .neo-quill-wrap .ql-container.ql-snow {
     border: 3px solid #101010;
     border-top: 0;
     background: #ffffff;
@@ -173,7 +195,12 @@
     font-family: Manrope, sans-serif;
   }
 
-  .ql-editor {
+  .neo-quill-wrap .ql-editor {
     min-height: 260px;
+  }
+
+  .neo-quill-wrap .ql-editor.ql-blank::before {
+    color: #64748b;
+    font-style: normal;
   }
 }
