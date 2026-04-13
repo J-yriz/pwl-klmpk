@@ -1,12 +1,25 @@
 <?= $this->extend('layouts/main') ?>
 
+<?= $this->section('prepend_styles') ?>
+<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
+<?= $this->endSection() ?>
+
 <?= $this->section('content') ?>
+<?php $editorMode = $editor_mode ?? 'new'; ?>
 <section class="neo-shell p-5 md:p-8">
     <div class="flex flex-wrap items-center justify-between gap-3">
         <div>
-            <span class="neo-chip">Editor Artikel</span>
-            <h1 class="neo-title mt-3 text-3xl md:text-4xl">Tulis artikel baru</h1>
-            <p class="mt-2 text-sm">Editor ini memakai WYSIWYG dengan dukungan teks, embed video, gambar, dan code block.</p>
+            <span class="neo-chip"><?= $editorMode === 'draft' ? 'Editor Draft' : 'Editor Artikel' ?></span>
+            <h1 class="neo-title mt-3 text-3xl md:text-4xl"><?php
+                if ($editorMode === 'new') {
+                    echo 'Tulis artikel baru';
+                } elseif ($editorMode === 'draft') {
+                    echo 'Edit draft';
+                } else {
+                    echo 'Edit artikel';
+                }
+            ?></h1>
+            <p class="mt-2 text-sm">Susun artikel di sini: format teks, sisipkan gambar atau video, dan tambahkan blok kode jika diperlukan.</p>
         </div>
         <span class="neo-btn-ghost">Kreator: <?= esc($creator['name'] ?? '-') ?></span>
     </div>
@@ -14,8 +27,10 @@
 
 <section class="mt-8 grid gap-6 lg:grid-cols-[1.4fr_1fr]">
     <div class="neo-shell p-5 md:p-6">
-        <form action="<?= site_url('kreator/editor') ?>" method="post" class="space-y-4" id="article-editor-form">
+        <form action="<?= site_url('kreator/editor') ?>" method="post" enctype="multipart/form-data" class="space-y-4" id="article-editor-form">
             <?= csrf_field() ?>
+            <input type="hidden" name="article_id" value="<?= esc((string) ($draft_example['id'] ?? '')) ?>">
+            <input type="hidden" name="article_status" value="<?= esc((string) ($draft_example['status'] ?? '')) ?>">
             <div>
                 <label class="neo-label" for="article-title">Judul Artikel</label>
                 <input id="article-title" name="title" type="text" class="neo-input" value="<?= esc($draft_example['title']) ?>" required>
@@ -23,12 +38,13 @@
 
             <div>
                 <label class="neo-label" for="article-cover">Cover Image</label>
-                <input id="article-cover" name="cover_image" type="url" class="neo-input" value="<?= esc($draft_example['cover_image']) ?>">
+                <input id="article-cover" name="cover_image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="neo-input file:mr-3 file:rounded file:border-3 file:border-neo-black file:bg-neo-white file:px-3 file:py-1 file:font-mono file:text-sm">
+                <p class="mt-1 text-xs text-gray-600">Opsional. JPG, PNG, GIF, atau WebP, maks. 5 MB. Tanpa file, dipakai gambar default.</p>
             </div>
 
             <div>
                 <label class="neo-label" for="article-category">Kategori</label>
-                <?php $selectedCategoryId = (int) old('category_id', $categories[0]['id'] ?? 0); ?>
+                <?php $selectedCategoryId = (int) ($draft_example['category_id'] ?? ($categories[0]['id'] ?? 0)); ?>
                 <select id="article-category" name="category_id" class="neo-input" required>
                     <?php foreach ($categories as $category): ?>
                         <?php $isSelected = $selectedCategoryId === (int) $category['id']; ?>
@@ -39,13 +55,22 @@
 
             <div>
                 <label class="neo-label" for="editor">Konten</label>
-                <div id="editor" class="min-h-80 border-3 border-neo-black bg-neo-white"></div>
+                <div class="neo-quill-wrap min-h-80">
+                    <div id="editor"></div>
+                </div>
                 <input type="hidden" id="editor-content" name="content" value="<?= esc($draft_example['content']) ?>">
             </div>
 
             <div class="flex flex-wrap gap-2">
-                <button type="submit" class="neo-btn-primary">Publikasi</button>
-                <button type="button" class="neo-btn-ghost">Simpan Draft</button>
+                <?php if ($editorMode === 'new'): ?>
+                    <button type="submit" name="save_action" value="publish" class="neo-btn-primary">Publikasi</button>
+                    <button type="submit" name="save_action" value="draft" class="neo-btn-ghost">Simpan Draft</button>
+                <?php elseif ($editorMode === 'draft'): ?>
+                    <button type="submit" name="save_action" value="draft" class="neo-btn-primary">Perbarui Draft</button>
+                    <button type="submit" name="save_action" value="publish" class="neo-btn-accent">Publikasikan</button>
+                <?php else: ?>
+                    <button type="submit" name="save_action" value="publish" class="neo-btn-primary">Update Artikel</button>
+                <?php endif; ?>
             </div>
         </form>
     </div>
@@ -70,11 +95,11 @@
 <?= $this->endSection() ?>
 
 <?= $this->section('scripts') ?>
-<link href="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.snow.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/quill@1.3.7/dist/quill.min.js"></script>
 <script>
     const quill = new window.Quill('#editor', {
         theme: 'snow',
+        placeholder: 'Tulis artikelmu di sini...',
         modules: {
             toolbar: [
                 [{ header: [1, 2, 3, false] }],
@@ -95,12 +120,23 @@
         editorContentInput.value = quill.root.innerHTML;
     });
 
-    coverInput.addEventListener('input', () => {
-        if (coverInput.value.trim() !== '') {
-            coverPreview.src = coverInput.value;
+    coverInput.addEventListener('change', () => {
+        const file = coverInput.files && coverInput.files[0];
+        if (!file) {
+            return;
         }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            if (e.target && typeof e.target.result === 'string') {
+                coverPreview.src = e.target.result;
+            }
+        };
+        reader.readAsDataURL(file);
     });
 
-    quill.root.innerHTML = <?= json_encode($draft_example['content']) ?>;
+    const initialContent = <?= json_encode($draft_example['content']) ?>;
+    if (initialContent) {
+        quill.root.innerHTML = initialContent;
+    }
 </script>
 <?= $this->endSection() ?>
