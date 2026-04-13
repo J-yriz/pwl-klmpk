@@ -33,21 +33,6 @@
     </div>
 </section>
 
-<section class="mt-8 neo-shell p-5 md:p-6">
-    <div class="mb-4 flex items-center justify-between">
-        <h2 class="neo-title text-2xl">Kategori</h2>
-        <a href="<?= site_url('') ?>" class="neo-link text-xs">Semua Artikel</a>
-    </div>
-    <div class="flex flex-wrap gap-2">
-        <?php foreach ($categories as $category): ?>
-            <a href="<?= site_url('kategori/' . $category['slug']) ?>" class="neo-btn-ghost">
-                <?= esc($category['name']) ?>
-                <span class="ml-2 border-l-3 border-neo-black pl-2 font-mono text-xs"><?= esc((string) $category['articles_count']) ?></span>
-            </a>
-        <?php endforeach; ?>
-    </div>
-</section>
-
 <section class="mt-8 space-y-4">
     <div class="flex items-center justify-between">
         <h2 class="neo-title text-2xl md:text-3xl">Artikel Terbaru</h2>
