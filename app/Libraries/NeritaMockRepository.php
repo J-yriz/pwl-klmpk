@@ -172,7 +172,7 @@ class NeritaMockRepository
             'draft_example' => [
                 'title' => 'Membuat Dokumentasi Teknis yang Enak Dibaca',
                 'cover_image' => 'https://picsum.photos/seed/nerita-editor/1600/900',
-                'content' => '<p>Mulai nulis draft kamu di sini.</p>',
+                'content' => '',
             ],
         ];
     }
