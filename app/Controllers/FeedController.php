@@ -61,6 +61,10 @@ class FeedController extends BaseController
             throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
         }
 
+        if (($article['status'] ?? NeritaRepository::STATUS_PUBLISHED) !== NeritaRepository::STATUS_PUBLISHED) {
+            throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
+        }
+
         $rules = [
             'content' => 'required|min_length[3]|max_length[2000]',
         ];
@@ -96,6 +100,10 @@ class FeedController extends BaseController
             throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
         }
 
+        if (($article['status'] ?? NeritaRepository::STATUS_PUBLISHED) !== NeritaRepository::STATUS_PUBLISHED) {
+            throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
+        }
+
         $isLiked = $repository->toggleLike($userId, (int) $article['id']);
 
         return redirect()->back()->with('success', $isLiked ? 'Artikel disukai.' : 'Like dibatalkan.');
@@ -113,6 +121,10 @@ class FeedController extends BaseController
         $article = $repository->findArticleBySlug($slug);
 
         if ($article === null) {
+            throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
+        }
+
+        if (($article['status'] ?? NeritaRepository::STATUS_PUBLISHED) !== NeritaRepository::STATUS_PUBLISHED) {
             throw PageNotFoundException::forPageNotFound('Artikel tidak ditemukan.');
         }
 
