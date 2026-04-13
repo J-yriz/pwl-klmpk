@@ -12,6 +12,10 @@ use CodeIgniter\Database\BaseConnection;
 
 class NeritaRepository
 {
+    public const STATUS_DRAFT = 'draft';
+
+    public const STATUS_PUBLISHED = 'published';
+
     private BaseConnection $db;
 
     private UserModel $userModel;
@@ -65,12 +69,14 @@ class NeritaRepository
     public function getHomepageData(?int $currentUserId): array
     {
         $latestArticles = $this->articleBaseBuilder($currentUserId)
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->orderBy('a.created_at', 'DESC')
             ->limit(6)
             ->get()
             ->getResultArray();
 
         $popularArticles = $this->articleBaseBuilder($currentUserId)
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->orderBy('(likes_count * 3) + (comments_count * 2) + bookmarks_count', 'DESC', false)
             ->orderBy('a.created_at', 'DESC')
             ->limit(6)
@@ -79,8 +85,8 @@ class NeritaRepository
 
         return [
             'stats' => [
-                'articles_count' => (int) $this->db->table('articles')->countAllResults(),
-                'authors_count' => (int) $this->db->table('articles')->select('user_id')->distinct()->countAllResults(),
+                'articles_count' => (int) $this->db->table('articles')->where('status', self::STATUS_PUBLISHED)->countAllResults(),
+                'authors_count' => (int) $this->db->table('articles')->select('user_id')->where('status', self::STATUS_PUBLISHED)->distinct()->countAllResults(),
                 'comments_count' => (int) $this->db->table('comments')->countAllResults(),
                 'bookmarks_count' => (int) $this->db->table('bookmarks')->countAllResults(),
             ],
@@ -101,6 +107,7 @@ class NeritaRepository
 
         $articles = $this->articleBaseBuilder($currentUserId)
             ->where('a.category_id', (int) $category['id'])
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->orderBy('a.created_at', 'DESC')
             ->get()
             ->getResultArray();
@@ -122,6 +129,7 @@ class NeritaRepository
     {
         $article = $this->articleBaseBuilder($currentUserId)
             ->where('a.slug', $slug)
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->get()
             ->getRowArray();
 
@@ -142,6 +150,7 @@ class NeritaRepository
         $relatedArticles = $this->articleBaseBuilder($currentUserId)
             ->where('a.category_id', (int) $article['category_id'])
             ->where('a.id !=', $articleId)
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->orderBy('a.created_at', 'DESC')
             ->limit(3)
             ->get()
@@ -170,6 +179,7 @@ class NeritaRepository
         $savedArticles = $this->articleBaseBuilder($userId)
             ->join('bookmarks bm', 'bm.article_id = a.id', 'inner')
             ->where('bm.user_id', $userId)
+            ->where('a.status', self::STATUS_PUBLISHED)
             ->orderBy('bm.created_at', 'DESC')
             ->get()
             ->getResultArray();
@@ -183,39 +193,81 @@ class NeritaRepository
 
     public function getDashboardPageData(int $userId): array
     {
-        $articles = $this->articleBaseBuilder($userId)
+        $rows = $this->articleBaseBuilder($userId)
             ->where('a.user_id', $userId)
             ->orderBy('a.created_at', 'DESC')
             ->get()
             ->getResultArray();
 
-        $articleIds = array_map(static fn (array $row): int => (int) $row['id'], $articles);
+        $publishedRows = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['status'] ?? self::STATUS_PUBLISHED) === self::STATUS_PUBLISHED,
+        ));
+        $draftRows = array_values(array_filter(
+            $rows,
+            static fn (array $row): bool => ($row['status'] ?? self::STATUS_PUBLISHED) === self::STATUS_DRAFT,
+        ));
+
+        $publishedIds = array_map(static fn (array $row): int => (int) $row['id'], $publishedRows);
 
         return [
             'creator' => $this->findUserById($userId),
             'totals' => [
-                'articles' => count($articleIds),
-                'likes' => $articleIds === [] ? 0 : (int) $this->db->table('likes')->whereIn('article_id', $articleIds)->countAllResults(),
-                'comments' => $articleIds === [] ? 0 : (int) $this->db->table('comments')->whereIn('article_id', $articleIds)->countAllResults(),
-                'bookmarks' => $articleIds === [] ? 0 : (int) $this->db->table('bookmarks')->whereIn('article_id', $articleIds)->countAllResults(),
+                'published' => count($publishedRows),
+                'drafts' => count($draftRows),
+                'likes' => $publishedIds === [] ? 0 : (int) $this->db->table('likes')->whereIn('article_id', $publishedIds)->countAllResults(),
+                'comments' => $publishedIds === [] ? 0 : (int) $this->db->table('comments')->whereIn('article_id', $publishedIds)->countAllResults(),
+                'bookmarks' => $publishedIds === [] ? 0 : (int) $this->db->table('bookmarks')->whereIn('article_id', $publishedIds)->countAllResults(),
             ],
-            'articles' => array_map(fn (array $row): array => $this->mapArticle($row), $articles),
+            'published_articles' => array_map(fn (array $row): array => $this->mapArticle($row), $publishedRows),
+            'draft_articles' => array_map(fn (array $row): array => $this->mapArticle($row), $draftRows),
             'current_user' => $this->findUserById($userId),
         ];
     }
 
-    public function getEditorPageData(int $userId): array
+    public function getEditorPageData(int $userId, ?array $article = null): array
     {
+        $editorMode = 'new';
+        if ($article !== null) {
+            $st = (string) ($article['status'] ?? self::STATUS_PUBLISHED);
+            $editorMode = $st === self::STATUS_DRAFT ? 'draft' : 'published';
+        }
+
         return [
             'creator' => $this->findUserById($userId),
             'categories' => $this->categoryModel->orderBy('name', 'ASC')->findAll(),
+            'editing_article' => $article,
+            'editor_mode' => $editorMode,
             'draft_example' => [
-                'title' => old('title', ''),
-                'cover_image' => old('cover_image', 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?auto=format&fit=crop&w=1280&q=80'),
-                'content' => old('content', '<p>Tulis artikelmu di sini...</p>'),
+                'id' => old('article_id', (string) ($article['id'] ?? '')),
+                'status' => old('article_status', (string) ($article['status'] ?? '')),
+                'title' => old('title', (string) ($article['title'] ?? '')),
+                'category_id' => (int) old('category_id', (int) ($article['category_id'] ?? 0)),
+                'cover_image' => old('cover_image', (string) ($article['cover_image'] ?? 'https://images.unsplash.com/photo-1484417894907-623942c8ee29?auto=format&fit=crop&w=1280&q=80')),
+                'content' => old('content', (string) ($article['content'] ?? '')),
             ],
             'current_user' => $this->findUserById($userId),
         ];
+    }
+
+    public function findUserArticleBySlug(int $userId, string $slug): ?array
+    {
+        $article = $this->articleModel
+            ->where('user_id', $userId)
+            ->where('slug', $slug)
+            ->first();
+
+        return is_array($article) ? $article : null;
+    }
+
+    public function findUserArticleById(int $userId, int $articleId): ?array
+    {
+        $article = $this->articleModel
+            ->where('user_id', $userId)
+            ->where('id', $articleId)
+            ->first();
+
+        return is_array($article) ? $article : null;
     }
 
     /**
@@ -282,9 +334,11 @@ class NeritaRepository
         ]);
     }
 
-    public function createArticle(int $userId, int $categoryId, string $title, string $content, ?string $coverImage): ?array
+    public function createArticle(int $userId, int $categoryId, string $title, string $content, ?string $coverImage, string $status = self::STATUS_PUBLISHED): ?array
     {
-        $slug = $this->generateUniqueArticleSlug($title);
+        $slug = $this->generateUniqueArticleSlug();
+
+        $defaultCover = 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1280&q=80';
 
         $this->articleModel->insert([
             'user_id' => $userId,
@@ -294,7 +348,8 @@ class NeritaRepository
             'content' => $content,
             'cover_image' => $coverImage !== null && $coverImage !== ''
                 ? $coverImage
-                : 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1280&q=80',
+                : $defaultCover,
+            'status' => $status,
         ]);
 
         $newId = (int) $this->articleModel->getInsertID();
@@ -302,17 +357,53 @@ class NeritaRepository
         return $this->articleModel->find($newId);
     }
 
-    private function generateUniqueArticleSlug(string $title): string
-    {
-        $baseSlug = url_title($title, '-', true);
-        $baseSlug = $baseSlug !== '' ? $baseSlug : 'artikel';
-        $slug = $baseSlug;
-        $counter = 2;
+    public function updateArticle(
+        int $articleId,
+        int $userId,
+        int $categoryId,
+        string $title,
+        string $content,
+        ?string $coverImage,
+        ?string $status = null,
+    ): ?array {
+        $existing = $this->articleModel
+            ->where('id', $articleId)
+            ->where('user_id', $userId)
+            ->first();
 
-        while ($this->articleModel->where('slug', $slug)->countAllResults() > 0) {
-            $slug = $baseSlug . '-' . $counter;
-            $counter++;
+        if (! is_array($existing)) {
+            return null;
         }
+
+        $data = [
+            'category_id' => $categoryId,
+            'title' => $title,
+            'content' => $content,
+            'cover_image' => $coverImage !== null && $coverImage !== ''
+                ? $coverImage
+                : (string) ($existing['cover_image'] ?? ''),
+        ];
+
+        if ($status !== null && $status !== '') {
+            $data['status'] = $status;
+        }
+
+        $this->articleModel->update($articleId, $data);
+
+        return $this->articleModel->find($articleId);
+    }
+
+    private function generateUniqueArticleSlug(): string
+    {
+        do {
+            // URL id acak yang stabil (contoh: a3f91b2c-8d77f0e1-4b2a99d0)
+            $slug = sprintf(
+                '%s-%s-%s',
+                bin2hex(random_bytes(4)),
+                bin2hex(random_bytes(4)),
+                bin2hex(random_bytes(4)),
+            );
+        } while ($this->articleModel->where('slug', $slug)->countAllResults() > 0);
 
         return $slug;
     }
@@ -324,7 +415,7 @@ class NeritaRepository
     {
         $rows = $this->db->table('categories c')
             ->select('c.id, c.name, c.slug, COUNT(a.id) AS articles_count')
-            ->join('articles a', 'a.category_id = c.id', 'left')
+            ->join('articles a', 'a.category_id = c.id AND a.status = ' . $this->db->escape(self::STATUS_PUBLISHED), 'left', false)
             ->groupBy('c.id, c.name, c.slug')
             ->orderBy('c.name', 'ASC')
             ->get()
@@ -353,7 +444,7 @@ class NeritaRepository
 
         return $this->db->table('articles a')
             ->select(
-                "a.id, a.user_id, a.category_id, a.title, a.slug, a.content, a.cover_image, a.created_at, " .
+                "a.id, a.user_id, a.category_id, a.title, a.slug, a.content, a.cover_image, a.status, a.created_at, " .
                 "u.name AS author_name, c.name AS category_name, c.slug AS category_slug, " .
                 "(SELECT COUNT(*) FROM likes l WHERE l.article_id = a.id) AS likes_count, " .
                 "(SELECT COUNT(*) FROM comments cm WHERE cm.article_id = a.id) AS comments_count, " .
@@ -377,6 +468,7 @@ class NeritaRepository
             'slug' => (string) $row['slug'],
             'content' => (string) $row['content'],
             'cover_image' => (string) $row['cover_image'],
+            'status' => (string) ($row['status'] ?? self::STATUS_PUBLISHED),
             'created_label' => $this->formatDateLabel((string) $row['created_at']),
             'reading_minutes' => $readingMinutes,
             'likes_count' => (int) $row['likes_count'],
