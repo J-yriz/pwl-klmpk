@@ -26,7 +26,7 @@
             <div class="grid grid-cols-2 gap-2">
                 <form action="<?= site_url('artikel/' . $article['slug'] . '/like') ?>" method="post">
                     <?= csrf_field() ?>
-                    <button type="submit" class="neo-btn-ghost w-full <?= $article['liked_by_current_user'] ? 'bg-neo-red text-neo-white' : '' ?>">Like</button>
+                    <button type="submit" class="w-full <?= $article['liked_by_current_user'] ? 'neo-btn-primary' : 'neo-btn-ghost' ?>">Like</button>
                 </form>
                 <form action="<?= site_url('artikel/' . $article['slug'] . '/bookmark') ?>" method="post">
                     <?= csrf_field() ?>

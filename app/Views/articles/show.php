@@ -23,7 +23,7 @@
                 <?php else: ?>
                     <form action="<?= site_url('artikel/' . $article['slug'] . '/like') ?>" method="post">
                         <?= csrf_field() ?>
-                        <button type="submit" class="neo-btn-ghost w-full <?= $article['liked_by_current_user'] ? 'bg-neo-red text-neo-white' : '' ?>">
+                        <button type="submit" class="w-full <?= $article['liked_by_current_user'] ? 'neo-btn-primary' : 'neo-btn-ghost' ?>">
                             Like (<?= esc((string) $article['likes_count']) ?>)
                         </button>
                     </form>
