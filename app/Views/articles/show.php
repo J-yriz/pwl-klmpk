@@ -29,7 +29,7 @@
                     </form>
                     <form action="<?= site_url('artikel/' . $article['slug'] . '/bookmark') ?>" method="post">
                         <?= csrf_field() ?>
-                        <button type="submit" class="neo-btn-ghost w-full <?= $article['bookmarked_by_current_user'] ? 'bg-neo-black text-neo-white' : '' ?>">
+                        <button type="submit" class="neo-btn-ghost w-full <?= $article['bookmarked_by_current_user'] ? 'bg-gray-300 text-neo-black' : '' ?>">
                             Bookmark (<?= esc((string) $article['bookmarks_count']) ?>)
                         </button>
                     </form>

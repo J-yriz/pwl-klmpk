@@ -55,43 +55,53 @@
   }
 
   .neo-btn {
-    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight shadow-neo-sm transition duration-150;
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight;
+  }
+
+  .neo-btn,
+  .neo-btn-primary,
+  .neo-btn-accent,
+  .neo-btn-ghost {
+    box-shadow: 4px 4px 0 0 #101010;
+    transition-property: transform, box-shadow, background-color, color;
+    transition-duration: 220ms;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .neo-btn:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 0 #101010;
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 #101010;
   }
 
   .neo-btn:active {
-    transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 0 #101010;
+    transform: translate(0, 0);
+    box-shadow: 3px 3px 0 0 #101010;
   }
 
   .neo-btn-primary {
-    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-blue px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black shadow-neo-sm transition duration-150;
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-blue px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black;
   }
 
   .neo-btn-accent {
-    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-red px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-white shadow-neo-sm transition duration-150;
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-red px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-white;
   }
 
   .neo-btn-ghost {
-    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black shadow-neo-sm transition duration-150;
+    @apply inline-flex items-center justify-center border-3 border-neo-black bg-neo-white px-4 py-2 font-display text-sm uppercase tracking-tight text-neo-black;
   }
 
   .neo-btn-primary:hover,
   .neo-btn-accent:hover,
   .neo-btn-ghost:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 6px 6px 0 0 #101010;
+    transform: translate(-1px, -1px);
+    box-shadow: 5px 5px 0 0 #101010;
   }
 
   .neo-btn-primary:active,
   .neo-btn-accent:active,
   .neo-btn-ghost:active {
-    transform: translate(1px, 1px);
-    box-shadow: 2px 2px 0 0 #101010;
+    transform: translate(0, 0);
+    box-shadow: 3px 3px 0 0 #101010;
   }
 
   .neo-input {
